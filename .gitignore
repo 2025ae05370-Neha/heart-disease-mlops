@@ -22,6 +22,9 @@ data/raw/
 models/*.joblib
 models/*.pkl
 
+# ---- Assignment brief (not needed in the public repo) ----
+Instructions.md
+
 # ---- OS / editor ----
 .DS_Store
 .vscode/

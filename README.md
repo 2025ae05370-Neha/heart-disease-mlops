@@ -118,6 +118,57 @@ Example response:
 
 ---
 
+## Deploy to Kubernetes (Minikube)
+
+Manifests live in [k8s/](k8s): a **Deployment** (2 replicas, health probes,
+resource limits) and a **LoadBalancer Service**.
+
+```bash
+# 1. Start a local cluster (native arm64 via the docker driver)
+minikube start --driver=docker
+
+# 2. Build the image and load it into the cluster
+docker build -t heart-disease-api:latest .
+minikube image load heart-disease-api:latest
+
+# 3. Deploy
+kubectl apply -f k8s/
+
+# 4. Check it is running
+kubectl get pods -l app=heart-disease-api
+kubectl get svc heart-disease-api
+```
+
+### Access the service
+
+Option A — LoadBalancer (run in a separate terminal; needs sudo for port 80):
+```bash
+minikube tunnel
+# then the Service gets an EXTERNAL-IP:
+kubectl get svc heart-disease-api
+curl http://<EXTERNAL-IP>/health
+```
+
+Option B — quick URL (no sudo):
+```bash
+minikube service heart-disease-api --url
+# curl the printed URL, e.g. curl http://127.0.0.1:PORT/health
+```
+
+Option C — port-forward (no sudo):
+```bash
+kubectl port-forward svc/heart-disease-api 9000:80
+curl http://127.0.0.1:9000/health
+```
+
+### Clean up
+```bash
+kubectl delete -f k8s/
+minikube stop
+```
+
+---
+
 ## Model
 
 Two classifiers are trained and compared with 5-fold cross-validation and
