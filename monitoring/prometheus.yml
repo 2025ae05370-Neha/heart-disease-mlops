@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Scrape the heart-disease API's /metrics endpoint
+  - job_name: "heart-disease-api"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+  # Prometheus scraping itself (useful for sanity checks)
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

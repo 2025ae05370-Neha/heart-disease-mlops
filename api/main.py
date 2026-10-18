@@ -11,10 +11,17 @@ from __future__ import annotations
 
 import logging
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 from pydantic import BaseModel, Field
 
 # Make the project's src/ importable (predict.py, pipeline.py)
@@ -29,6 +36,23 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 logger = logging.getLogger("heart-api")
+
+# ---- Prometheus metrics ----
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "http_status"],
+)
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request latency in seconds",
+    ["endpoint"],
+)
+PREDICTIONS = Counter(
+    "heart_predictions_total",
+    "Total predictions made, by label",
+    ["label"],
+)
 
 
 @asynccontextmanager
@@ -73,12 +97,24 @@ class PredictionResponse(BaseModel):
     probability: float = Field(..., description="Probability of disease (0-1)")
 
 
+@app.middleware("http")
+async def record_metrics(request: Request, call_next):
+    """Record request latency and count for every HTTP request."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    endpoint = request.url.path
+    REQUEST_LATENCY.labels(endpoint=endpoint).observe(elapsed)
+    REQUEST_COUNT.labels(request.method, endpoint, response.status_code).inc()
+    return response
+
+
 @app.get("/")
 def root() -> dict:
     return {
         "service": "Heart Disease Prediction API",
         "version": "1.0.0",
-        "endpoints": ["/health", "/predict", "/docs"],
+        "endpoints": ["/health", "/predict", "/metrics", "/docs"],
     }
 
 
@@ -87,9 +123,16 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/metrics")
+def metrics() -> Response:
+    """Prometheus scrape endpoint."""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.post("/predict", response_model=PredictionResponse)
 def predict(features: PatientFeatures) -> PredictionResponse:
     payload = features.model_dump()
     result = run_prediction(payload)
+    PREDICTIONS.labels(label=result["label"]).inc()
     logger.info("prediction=%s probability=%s", result["prediction"], result["probability"])
     return PredictionResponse(**result)

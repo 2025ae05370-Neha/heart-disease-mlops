@@ -169,6 +169,46 @@ minikube stop
 
 ---
 
+## Monitoring (Prometheus + Grafana)
+
+The API exposes Prometheus metrics at `/metrics`:
+- `http_requests_total` — request count by method/endpoint/status
+- `http_request_duration_seconds` — request latency histogram
+- `heart_predictions_total` — predictions made, by label
+
+A ready-to-run stack (API + Prometheus + Grafana) lives in [monitoring/](monitoring):
+
+```bash
+cd monitoring
+docker compose up -d --build
+```
+
+Then open:
+
+| Service | URL | Notes |
+|---------|-----|-------|
+| API docs | http://localhost:8000/docs | send some `/predict` requests |
+| Prometheus | http://localhost:9090 | Status → Targets should show `up` |
+| Grafana | http://localhost:3000 | dashboard **Heart Disease API Monitoring** (login `admin` / `admin`) |
+
+Generate some traffic, then watch the Grafana dashboard update:
+```bash
+for i in $(seq 1 20); do
+  curl -s -X POST http://localhost:8000/predict -H "Content-Type: application/json" \
+    -d '{"age":63,"sex":1,"cp":3,"trestbps":145,"chol":233,"fbs":1,"restecg":0,"thalach":150,"exang":0,"oldpeak":2.3,"slope":3,"ca":0,"thal":6}' > /dev/null
+done
+```
+
+The Grafana datasource and dashboard are **auto-provisioned** (see
+`monitoring/grafana/provisioning/`), so no manual setup is needed.
+
+Stop the stack:
+```bash
+docker compose -f monitoring/docker-compose.yml down
+```
+
+---
+
 ## Model
 
 Two classifiers are trained and compared with 5-fold cross-validation and
