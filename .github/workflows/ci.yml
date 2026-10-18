@@ -41,6 +41,25 @@ jobs:
       - name: Train model
         run: python src/train.py
 
+      - name: Build Docker image
+        run: docker build -t heart-disease-api:latest .
+
+      - name: Smoke-test the container
+        run: |
+          docker run -d -p 8000:8000 --name heart-api heart-disease-api:latest
+          echo "Waiting for the API to become healthy..."
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8000/health; then echo " -> health OK"; break; fi
+            sleep 2
+          done
+          echo "Testing /predict endpoint..."
+          curl -sf -X POST http://127.0.0.1:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"age":63,"sex":1,"cp":3,"trestbps":145,"chol":233,"fbs":1,"restecg":0,"thalach":150,"exang":0,"oldpeak":2.3,"slope":3,"ca":0,"thal":6}'
+          echo ""
+          docker logs heart-api
+          docker rm -f heart-api
+
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:

@@ -73,6 +73,51 @@ python src/predict.py
 
 ---
 
+## Run the API with Docker
+
+The serving API ([api/main.py](api/main.py)) is packaged in a Docker image.
+
+```bash
+# Build the image
+docker build -t heart-disease-api:latest .
+
+# Run the container (maps container port 8000 to localhost:8000)
+docker run -d -p 8000:8000 --name heart-api heart-disease-api:latest
+
+# Test it
+curl http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"age":63,"sex":1,"cp":3,"trestbps":145,"chol":233,"fbs":1,"restecg":0,
+       "thalach":150,"exang":0,"oldpeak":2.3,"slope":3,"ca":0,"thal":6}'
+
+# Interactive API docs:  http://127.0.0.1:8000/docs
+
+# Stop and remove
+docker rm -f heart-api
+```
+
+Example response:
+```json
+{"prediction": 1, "label": "disease", "probability": 0.5589}
+```
+
+> **Apple Silicon note:** the image is Python 3.13 slim. If your container
+> runtime emulates x86_64 (e.g. an x86_64 Colima VM), the optimized numpy/scipy
+> binaries can crash with SIGILL. Run on a native arm64 engine, e.g.
+> `colima start --profile mlops --arch aarch64 --cpu 2 --memory 4` and build with
+> `docker --context colima-mlops build -t heart-disease-api:latest .`
+
+### API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check (used by Docker/Kubernetes) |
+| POST | `/predict` | Predict disease risk from patient JSON |
+| GET | `/docs` | Interactive Swagger UI |
+
+---
+
 ## Model
 
 Two classifiers are trained and compared with 5-fold cross-validation and
