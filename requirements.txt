@@ -1,0 +1,31 @@
+# ---- Core data & ML ----
+pandas>=2.2,<3.0
+numpy>=1.26,<3.0
+scikit-learn>=1.5,<2.0
+joblib>=1.4
+
+# ---- Visualization / EDA ----
+matplotlib>=3.9
+seaborn>=0.13
+
+# ---- Experiment tracking ----
+mlflow>=2.16,<3.0
+
+# ---- API serving ----
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.8
+
+# ---- Monitoring ----
+prometheus-client>=0.20
+
+# ---- Testing & linting ----
+pytest>=8.0
+ruff>=0.6
+
+# ---- Utilities ----
+requests>=2.32
+
+# ---- Notebook (EDA) ----
+jupyter>=1.0
+ipykernel>=6.29

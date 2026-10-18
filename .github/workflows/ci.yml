@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+# Run on every push and pull request to main
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:   # allow manual runs from the GitHub UI
+
+jobs:
+  build-test-train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with ruff
+        run: ruff check src tests
+
+      - name: Run unit tests
+        run: pytest
+
+      - name: Prepare dataset
+        run: |
+          python src/download_data.py
+          python src/preprocess.py
+
+      - name: Train model
+        run: python src/train.py
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: models/heart_model.joblib
+
+      - name: Upload plots and MLflow runs
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-artifacts
+          path: |
+            report/screenshots/
+            mlruns/
