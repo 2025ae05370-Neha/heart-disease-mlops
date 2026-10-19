@@ -48,7 +48,30 @@ pip install -r requirements.txt    # or: pip install -r requirements-lock.txt (e
 
 ---
 
-## Reproduce the full pipeline
+## Quick start with Make (one command)
+
+A `Makefile` automates the whole flow and **auto-detects the platform**
+(macOS/Colima vs Linux/native Docker), so the same commands work everywhere
+(including the Prayogshala Linux lab):
+
+```bash
+make all      # first time: create venv + install deps, then run the full stack
+make demo     # afterwards: train + start API + Prometheus + Grafana + traffic
+make down     # stop everything
+make help     # list all available targets
+```
+
+After `make demo`, open:
+- API docs — http://localhost:8000/docs
+- Prometheus — http://localhost:9090/targets
+- Grafana — http://localhost:3000 (admin/admin)
+
+Other useful targets: `make pipeline` (data → train → test), `make test`,
+`make lint`, `make k8s-deploy`, `make mlflow`.
+
+---
+
+## Reproduce the full pipeline (manual steps)
 
 ```bash
 # 1. Download the raw dataset (falls back to bundled copies if offline)

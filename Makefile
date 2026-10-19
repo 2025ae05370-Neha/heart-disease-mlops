@@ -1,0 +1,125 @@
+# Convenience commands for the Heart Disease MLOps project.
+# Usage: run `make help` to see all targets.
+#
+# Works on BOTH macOS (Colima) and Linux (e.g. Prayogshala lab):
+#   - First-time full run:   make all
+#   - Everyday full demo:     make demo
+#   - Tear everything down:   make down
+# The engine setup (Colima vs native Docker) is auto-detected from the OS.
+
+PY  := .venv/bin/python
+PIP := .venv/bin/pip
+COMPOSE := docker compose -f monitoring/docker-compose.yml
+UNAME := $(shell uname -s)
+
+.PHONY: help setup data train test lint pipeline serve \
+        docker-build docker-run docker-stop \
+        k8s-deploy k8s-status k8s-delete \
+        monitor monitor-down mlflow clean \
+        engine-up demo down all
+
+help:  ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	 awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+
+setup:  ## Create venv and install dependencies
+	python3 -m venv .venv
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.txt
+
+data:  ## Download and clean the dataset
+	$(PY) src/download_data.py
+	$(PY) src/preprocess.py
+
+train:  ## Train models, log to MLflow, save best model
+	$(PY) src/train.py
+
+test:  ## Run unit tests
+	$(PY) -m pytest
+
+lint:  ## Lint the code
+	$(PY) -m ruff check src tests api
+
+pipeline: data train test  ## Full ML pipeline: data -> train -> test (one command)
+
+serve:  ## Run the API locally (dev mode) on http://127.0.0.1:8000
+	$(PY) -m uvicorn api.main:app --host 127.0.0.1 --port 8000
+
+docker-build:  ## Build the Docker image (train first so the model exists)
+	$(PY) src/train.py
+	docker build -t heart-disease-api:latest .
+
+docker-run:  ## Run the container on http://127.0.0.1:8000
+	docker run -d -p 8000:8000 --name heart-api heart-disease-api:latest
+
+docker-stop:  ## Stop and remove the container
+	docker rm -f heart-api
+
+k8s-deploy:  ## Load image into Minikube and deploy
+	minikube image load heart-disease-api:latest
+	kubectl apply -f k8s/
+
+k8s-status:  ## Show pods and service
+	kubectl get pods -l app=heart-disease-api -o wide
+	kubectl get svc heart-disease-api
+
+k8s-delete:  ## Remove the Kubernetes deployment
+	kubectl delete -f k8s/
+
+monitor:  ## Start the FULL stack (API + Prometheus + Grafana) with one command
+	$(COMPOSE) up -d --build
+	@echo ""
+	@echo "API docs    -> http://localhost:8000/docs"
+	@echo "Prometheus  -> http://localhost:9090/targets"
+	@echo "Grafana     -> http://localhost:3000 (admin/admin)"
+
+monitor-down:  ## Stop the monitoring stack
+	$(COMPOSE) down
+
+mlflow:  ## Open the MLflow tracking UI
+	.venv/bin/mlflow ui --backend-store-uri "$(PWD)/mlruns" --port 5001
+
+# ---------------------------------------------------------------------------
+# One-command automation (auto-detects macOS Colima vs Linux native Docker)
+# ---------------------------------------------------------------------------
+
+engine-up:  ## Prepare the container engine (Colima on macOS; native Docker on Linux)
+ifeq ($(UNAME),Darwin)
+	@echo ">> macOS detected: starting Colima 'mlops' profile..."
+	colima start --profile mlops
+	docker context use colima-mlops
+	@echo ">> Docker context = colima-mlops"
+else
+	@echo ">> Linux detected: using native Docker"
+	@docker info >/dev/null 2>&1 || { echo "ERROR: Docker not reachable. Start it (e.g. 'sudo systemctl start docker') or check permissions."; exit 1; }
+endif
+
+demo: engine-up  ## ONE COMMAND: engine up -> train -> run full stack -> traffic
+	$(PY) src/train.py
+	$(COMPOSE) up -d --build
+	@echo ">> Waiting for services to start..."
+	@sleep 10
+	@echo ">> Generating sample traffic..."
+	@for i in $$(seq 1 20); do \
+	  curl -s -X POST http://127.0.0.1:8000/predict -H "Content-Type: application/json" \
+	    -d '{"age":63,"sex":1,"cp":3,"trestbps":145,"chol":233,"fbs":1,"restecg":0,"thalach":150,"exang":0,"oldpeak":2.3,"slope":3,"ca":0,"thal":6}' >/dev/null; \
+	  curl -s http://127.0.0.1:8000/health >/dev/null; \
+	done
+	@echo ""
+	@echo "==================== Everything is running ===================="
+	@echo "  API docs    -> http://localhost:8000/docs"
+	@echo "  Prometheus  -> http://localhost:9090/targets"
+	@echo "  Grafana     -> http://localhost:3000  (admin/admin)"
+	@echo "==============================================================="
+
+down:  ## Stop the full stack (and on macOS, the Colima engine)
+	-$(COMPOSE) down
+	-minikube stop
+ifeq ($(UNAME),Darwin)
+	-docker context use desktop-linux
+	-colima stop --profile mlops
+endif
+	@echo ">> Stopped."
+
+all: setup demo  ## FIRST-TIME full run: create venv + install, then demo
+
