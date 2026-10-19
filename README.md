@@ -66,8 +66,16 @@ After `make demo`, open:
 - Prometheus — http://localhost:9090/targets
 - Grafana — http://localhost:3000 (admin/admin)
 
+**Kubernetes deployment (Stage 7) in one command:**
+```bash
+make k8s-demo   # build image, start Minikube, deploy (2 replicas + LoadBalancer)
+make k8s-down   # remove the deployment and stop Minikube
+```
+Then access it: `minikube service heart-disease-api --url` (run in a separate
+terminal) and curl the printed URL.
+
 Other useful targets: `make pipeline` (data → train → test), `make test`,
-`make lint`, `make k8s-deploy`, `make mlflow`.
+`make lint`, `make mlflow`.
 
 ---
 

@@ -14,12 +14,12 @@ UNAME := $(shell uname -s)
 
 .PHONY: help setup data train test lint pipeline serve \
         docker-build docker-run docker-stop \
-        k8s-deploy k8s-status k8s-delete \
+        k8s-deploy k8s-status k8s-delete k8s-demo k8s-down \
         monitor monitor-down mlflow clean \
         engine-up demo down all
 
 help:  ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	 awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 setup:  ## Create venv and install dependencies
@@ -123,4 +123,32 @@ endif
 	@echo ">> Stopped."
 
 all: setup demo  ## FIRST-TIME full run: create venv + install, then demo
+
+# ---------------------------------------------------------------------------
+# One-command Kubernetes deployment (Stage 7) - works on macOS and Linux
+# ---------------------------------------------------------------------------
+
+k8s-demo: engine-up  ## ONE COMMAND: build image, start Minikube, deploy to k8s
+	$(PY) src/train.py
+	docker build -t heart-disease-api:latest .
+	minikube start --driver=docker
+	minikube image load heart-disease-api:latest
+	kubectl apply -f k8s/
+	@echo ">> Waiting for pods to be ready..."
+	kubectl wait --for=condition=ready pod -l app=heart-disease-api --timeout=150s
+	@echo ""
+	kubectl get pods -l app=heart-disease-api -o wide
+	kubectl get svc heart-disease-api
+	@echo ""
+	@echo "==================== Deployed to Kubernetes ===================="
+	@echo "  To access the API, run this in a SEPARATE terminal:"
+	@echo "      minikube service heart-disease-api --url"
+	@echo "  then curl the printed URL, e.g. curl http://127.0.0.1:PORT/health"
+	@echo "==============================================================="
+
+k8s-down:  ## Remove the k8s deployment and stop Minikube
+	-kubectl delete -f k8s/
+	-minikube stop
+	@echo ">> Kubernetes deployment removed and Minikube stopped."
+
 
