@@ -110,6 +110,7 @@ demo: engine-up  ## ONE COMMAND: engine up -> train -> run full stack -> traffic
 	@echo "  API docs    -> http://localhost:8000/docs"
 	@echo "  Prometheus  -> http://localhost:9090/targets"
 	@echo "  Grafana     -> http://localhost:3000  (admin/admin)"
+	@echo "  MLflow      -> run 'make mlflow' then http://localhost:5001"
 	@echo "==============================================================="
 
 down:  ## Stop the full stack (and on macOS, the Colima engine)
