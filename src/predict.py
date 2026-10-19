@@ -1,11 +1,12 @@
-"""Load the trained model and make predictions on new patient data.
+"""Inference logic - turning the trained model into predictions.
 
-Used both as a command-line tool and imported by the serving API so that
-training and serving share the exact same prediction logic.
+This is the single place where the saved model is loaded and used to score a
+new patient. Keeping it in one file means the command line and the web API both
+make predictions in exactly the same way, with no duplicated logic.
 
-Example (CLI):
-    python src/predict.py                 # predicts on a built-in sample
-    python src/predict.py '{"age": 54, "sex": 1, ...}'   # predict from JSON
+Examples:
+    python src/predict.py                 # predict for a built-in sample patient
+    python src/predict.py '{"age": 54, "sex": 1, ...}'   # predict from JSON input
 """
 
 from __future__ import annotations

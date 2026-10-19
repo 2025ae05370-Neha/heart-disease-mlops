@@ -1,10 +1,14 @@
-"""Download the UCI Heart Disease dataset.
+"""Data acquisition step of the MLOps assignment.
 
-Downloads the four 'processed' data files (Cleveland, Hungarian, Switzerland,
-VA) from the UCI Machine Learning Repository into ``data/raw/``.
+The whole project is built on the UCI Heart Disease dataset, and the assignment
+asks for a repeatable way to obtain it. Rather than downloading the files by
+hand, this script automates that first step.
 
-If the download fails (e.g. no internet), it falls back to the local copies
-bundled in the ``heart+disease/`` folder so the project still works offline.
+It downloads the four 'processed' hospital files (Cleveland, Hungary,
+Switzerland and Long Beach VA) from the UCI Machine Learning Repository and
+stores them in ``data/raw/``. If there is no internet connection (for example
+inside a restricted lab), it automatically falls back to the copies bundled in
+the ``heart+disease/`` folder, so the project always has data to work with.
 """
 
 from __future__ import annotations

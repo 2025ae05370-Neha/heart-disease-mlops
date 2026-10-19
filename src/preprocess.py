@@ -1,15 +1,21 @@
-"""Clean and merge the raw UCI Heart Disease files into a single CSV.
+"""Data cleaning step of the MLOps assignment.
 
-Steps performed:
-1. Read the four raw hospital files from ``data/raw/``.
-2. Attach proper column names (the raw files have no header).
-3. Tag each row with its ``source`` hospital.
-4. Replace the ``?`` placeholder with ``NaN`` and coerce all features to numbers.
-5. Binarize the target: ``num`` 0 -> 0 (no disease), 1-4 -> 1 (disease).
-6. Save the merged, cleaned table to ``data/processed/heart.csv``.
+Raw medical data is rarely ready for modelling, so this script turns the four
+separate hospital files into a single, clean, analysis-ready table.
 
-Missing values are intentionally left as ``NaN`` here so the EDA notebook can
-visualize them. Imputation is handled later inside the model pipeline.
+What it does, in order:
+1. Reads the four raw files from ``data/raw/``.
+2. Adds proper column names (the raw files have none).
+3. Records which hospital each row came from (the ``source`` column).
+4. Replaces the ``?`` placeholder used for missing data with ``NaN`` and makes
+   every feature numeric.
+5. Converts the original 0-4 diagnosis into a simple yes/no target
+   (0 = no disease, 1 = disease), which is what we actually predict.
+6. Saves the result to ``data/processed/heart.csv``.
+
+Missing values are deliberately left as ``NaN`` at this stage so the EDA
+notebook can show where data is missing; they are filled in later, inside the
+model pipeline.
 """
 
 from __future__ import annotations

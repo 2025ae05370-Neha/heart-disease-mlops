@@ -1,4 +1,9 @@
-"""Unit tests for the inference logic in src/predict.py."""
+"""Automated tests for the prediction logic (src/predict.py).
+
+These check that a prediction returns the expected fields, produces sensible
+values (a 0/1 prediction and a probability between 0 and 1), and that the text
+label always matches the numeric prediction.
+"""
 
 import pytest
 from sklearn.ensemble import RandomForestClassifier

@@ -1,5 +1,9 @@
-# Slim Python base image (matches the training environment so the
-# pickled model loads with identical numpy/scikit-learn versions)
+# Dockerfile for the prediction API.
+# This packages the application, its exact dependencies and the trained model
+# into one portable image, so the API runs the same way on a laptop, in CI, or
+# in the lab. We use Python 3.13-slim to match the environment the model was
+# trained in, so the saved model loads with identical numpy / scikit-learn
+# versions.
 FROM python:3.13-slim
 
 # Avoid interactive prompts; make Python output unbuffered for live logs

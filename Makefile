@@ -1,16 +1,35 @@
-# Convenience commands for the Heart Disease MLOps project.
-# Usage: run `make help` to see all targets.
+# ---------------------------------------------------------------------------
+# Makefile for the Heart Disease Prediction MLOps assignment.
 #
-# Works on BOTH macOS (Colima) and Linux (e.g. Prayogshala lab):
-#   - First-time full run:   make all
-#   - Everyday full demo:     make demo
-#   - Tear everything down:   make down
-# The engine setup (Colima vs native Docker) is auto-detected from the OS.
+# The idea behind this file is to let the whole project run through a few short,
+# memorable commands instead of long chains of docker / kubectl / python
+# commands. It wires together every stage of the assignment - preparing the
+# data, training the model, serving it as an API, monitoring it, and deploying
+# it to Kubernetes.
+#
+# It is written to work in BOTH environments used for this assignment:
+#   * a local macOS laptop, where Docker runs through Colima, and
+#   * the college Prayogshala Linux lab, where Docker runs natively.
+# The right container-engine setup is detected automatically from the operating
+# system, so the exact same commands work in either place.
+#
+# Most-used commands (run `make help` to see them all):
+#   make all       - first time: build the Python environment, then train and
+#                    start the fully monitored API in one go
+#   make demo      - everyday run: train + start API + Prometheus + Grafana
+#   make k8s-demo  - deploy the API to a local Kubernetes cluster (Minikube)
+#   make mlflow    - open the MLflow experiment-tracking dashboard
+#   make down      - stop everything
+# ---------------------------------------------------------------------------
 
 PY  := .venv/bin/python
 PIP := .venv/bin/pip
-COMPOSE := docker compose -f monitoring/docker-compose.yml
 UNAME := $(shell uname -s)
+
+# Prefer Docker Compose v2 ("docker compose"); fall back to the older
+# standalone "docker-compose" (v1) if that is what the lab provides.
+COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+COMPOSE := $(COMPOSE_BIN) -f monitoring/docker-compose.yml
 
 .PHONY: help setup data train test lint pipeline serve \
         docker-build docker-run docker-stop \

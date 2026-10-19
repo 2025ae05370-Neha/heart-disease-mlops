@@ -1,7 +1,14 @@
-"""Reusable data loading and preprocessing for the heart-disease model.
+"""Shared preprocessing pipeline - the key to reproducibility.
 
-Both the training script (``src/train.py``) and the serving API import from
-here so that the *exact same* preprocessing is used at train and predict time.
+A common mistake in ML projects is to clean the data one way during training
+and a slightly different way when serving predictions, which quietly breaks the
+model. To avoid that, every transformation the model needs lives in this single
+file, and both the training script and the prediction API import it.
+
+It defines which columns are numeric and which are categorical, how missing
+values are filled, how numbers are scaled, and how categories are encoded - all
+bundled into one scikit-learn Pipeline so the exact same steps run at training
+time and at prediction time.
 """
 
 from __future__ import annotations

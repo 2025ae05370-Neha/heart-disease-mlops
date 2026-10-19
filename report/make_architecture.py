@@ -1,6 +1,9 @@
-"""Generate the MLOps architecture diagram for the report.
+"""Draws the architecture diagram used in the project report.
 
-Produces report/screenshots/architecture.png
+Instead of drawing the system diagram by hand, this script generates it in
+code, so it can be regenerated at any time and always stays in sync with the
+project. It produces ``report/screenshots/architecture.png``, which shows how
+the data, training, CI/CD, serving and monitoring pieces fit together.
 """
 
 from pathlib import Path

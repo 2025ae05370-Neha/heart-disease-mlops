@@ -1,4 +1,9 @@
-"""Unit tests for the shared preprocessing pipeline in src/pipeline.py."""
+"""Automated tests for the shared preprocessing pipeline (src/pipeline.py).
+
+These confirm the pipeline behaves correctly: impossible zero values are
+treated as missing, the data loads with the expected columns, and the pipeline
+can fit, predict, and cope with completely missing input without crashing.
+"""
 
 import numpy as np
 import pandas as pd

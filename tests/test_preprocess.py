@@ -1,4 +1,10 @@
-"""Unit tests for the data cleaning logic in src/preprocess.py."""
+"""Automated tests for the data-cleaning logic (src/preprocess.py).
+
+These tests are part of the assignment's testing / CI requirement: they run
+automatically on every push and fail the pipeline if the cleaning ever breaks.
+Here we check that the original 0-4 diagnosis is correctly turned into a 0/1
+target and that the output columns are what the rest of the project expects.
+"""
 
 import numpy as np
 import pandas as pd

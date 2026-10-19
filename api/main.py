@@ -1,10 +1,15 @@
-"""FastAPI service that serves heart-disease predictions.
+"""Prediction API that serves the model over HTTP (later containerised).
+
+This is the production-facing part of the assignment. It wraps the trained
+model in a small FastAPI web service so other systems can request predictions
+simply by sending patient data as JSON.
 
 Endpoints:
-    GET  /         - basic info
-    GET  /health   - health check (used by Docker/Kubernetes)
-    POST /predict  - predict disease risk from patient features
-    GET  /docs     - auto-generated interactive API documentation
+    GET  /         - basic information about the service
+    GET  /health   - simple health check used by Docker and Kubernetes
+    POST /predict  - returns the disease prediction and confidence for a patient
+    GET  /metrics  - Prometheus metrics (request counts, latency, predictions)
+    GET  /docs     - automatic interactive API documentation
 """
 
 from __future__ import annotations

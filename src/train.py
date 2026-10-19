@@ -1,13 +1,20 @@
-"""Train and compare two heart-disease classifiers.
+"""Model development and experiment tracking.
 
-Models: Logistic Regression and Random Forest.
-For each model we:
-  * wrap it in the shared preprocessing pipeline,
-  * tune hyperparameters with GridSearchCV (5-fold cross-validation),
-  * evaluate on a held-out test set (accuracy, precision, recall, F1, ROC-AUC),
-  * save ROC-curve and confusion-matrix plots.
+This script is the modelling heart of the assignment. It trains two different
+classifiers - Logistic Regression and Random Forest - so we can compare them
+fairly instead of guessing which one is better.
 
-The best model (by test ROC-AUC) is saved to ``models/heart_model.joblib``.
+For each model it:
+  * wraps the model in the shared preprocessing pipeline,
+  * searches for good hyperparameters using GridSearchCV with 5-fold
+    cross-validation,
+  * measures performance on a held-out test set (accuracy, precision, recall,
+    F1 and ROC-AUC),
+  * saves ROC-curve and confusion-matrix plots for the report, and
+  * logs every run to MLflow so the experiments are recorded and comparable.
+
+The best model (highest test ROC-AUC) is saved to
+``models/heart_model.joblib`` for the API to serve.
 """
 
 from __future__ import annotations
