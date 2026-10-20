@@ -46,6 +46,17 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt    # or: pip install -r requirements-lock.txt (exact)
 ```
 
+### Running in the BITS Prayogshala Linux lab
+
+The lab provides Docker, Python and Minikube but hands out a fresh VM each
+session, so `make` and `kubectl` need to be reinstalled each time. A helper
+script does this automatically:
+
+```bash
+bash setup-lab.sh    # reinstalls make + kubectl (skips anything already present)
+make all             # run the whole MLOps flow
+```
+
 ---
 
 ## Quick start with Make (one command)
